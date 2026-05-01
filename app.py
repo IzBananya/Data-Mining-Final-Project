@@ -6,7 +6,7 @@ import streamlit as st
 from google import genai
 from google.genai import types
 import time, os
-from google.api_core import exceptions
+#from google.api_core import exceptions
 
 base_path = os.path.dirname(__file__)
 ratings_path = os.path.join(base_path, 'ml-latest-mid', 'ratings.csv')
@@ -115,13 +115,17 @@ def stream_ai_explanation(user_id, persona, movie_title, weighted_score, top_dri
         for chunk in responses:
             if chunk.text:
                 yield chunk.text
-    except exceptions.ServiceUnavailable:
-        yield "Google's servers are a bit crowded! Refreshing in a few seconds might help."
-    except exceptions.ResourceExhausted:
-        yield "We've hit the speed limit for now. Take a short intermission and try again shortly."
     except Exception as e:
-        print(f"DEBUG ERROR: {e}")
-        yield "MovieMind is currently experiencing some technical difficulties. Please check your terminal."
+        error_msg = str(e).lower()
+        if "503" in error_msg or "service_unavailable" in error_msg:
+            yield "Google's servers are a bit crowded! Refreshing in a few seconds might help."
+        elif "429 in error_msg or "resource_exhausted" in error_msg:
+            yield "We've hit the speed limit for now. Take a short intermission and try again shortly."
+        else:
+            print(f"DEBUG ERROR: {e}")
+            yield "MovieMind is currently experiencing some technical difficulties. Please check your terminal."
+    
+    
 
 # --- UI Layout ---
 st.title("MovieMind: AI Recommendation Engine")
